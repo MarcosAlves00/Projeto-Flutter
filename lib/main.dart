@@ -11,17 +11,97 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:http/http.dart' as http;
+
+Future<Financas> fetchFinancas() async{
+
+ final response =
+      await http.get('https://api.hgbrasil.com/finance?key=c43e72b7');
+
+      if (response.statuscode == 200) {
+        
+           return Financas.fromJson(json.decode(response.body));
+
+      } else {
+
+        throw Exception('Failed to load post');
+      }
+}
+
+class Financas {
+  
+  final String by;
+  final Boolean validKey ;
+  final Double executionTime;
+  final Boolean fromCache;
+
+  Financas({this.by, this.validKey, this.executionTime, this.fromCache});
+
+  factory Financas.fromJson(Map<String, dynamic> json){
+  
+     return Financas(
+       by: json['by'],
+       validKey: json['valid_key'],
+       executionTime: json['execution_time'],
+       fromCache: json['from_cache'],
+     );
+  }  
+}
 void main() => runApp(MyApp());
 
 /// This Widget is the main application widget.
 class MyApp extends StatelessWidget {
-  static const String _title = 'Flutter Code Sample';
+  static const String _title = 'Finanças ';
+  MyApp({key key}) : super(key: key);
+
+  @override
+  _MyAppState createState() => _MyAppState();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: _title,
       home: MyStatefulWidget(),
+    );
+  }
+}
+
+class _MyAppState extends State<MyApp>{
+  Future<Financas> financas;
+
+  @override
+  void initState(){
+    super.initState();
+    financas = fetchFinancas();
+  }
+
+  @override
+  widget build(BuildContext context){
+   
+    return MaterialApp(
+      title: 'Finanças',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Finanças'),
+        ),
+        body: Center(
+          child: FutureBuilder<Financas>(
+            future: Financas,
+            builder: (context, snapshot){
+              if(snapshot.hasData){
+                return Text(snapshot.data.title);
+              }
+              else if Text(snapshot.hasError){
+                return Text("${snapshot.error}");
+              }
+              return CircularProgressIndicator();
+            },
+          ),
+        ),
+      ),
     );
   }
 }
